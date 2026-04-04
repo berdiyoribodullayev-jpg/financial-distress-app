@@ -126,7 +126,7 @@ def compute_zscore(ticker_str):
     country = info.get("country", "N/A")
     website = info.get("website", "") or ""
     domain  = website.replace("https://","").replace("http://","").split("/")[0]
-    logo    = f"https://www.google.com/s2/favicons?domain={domain}&sz=64" if domain else ""
+    logo    = f"https://logo.clearbit.com/{domain}" if domain else ""
 
     vals = [wc, ta, re, tl, eb, rv]
     if all(v is not None for v in vals) and ta and ta != 0:
@@ -156,8 +156,7 @@ def gauge_pct(z):
     if z > 1.81: return 35 + (z - 1.81) * 12
     return max(5, z * 10)
 
-def render_zscore_panel(z, d, uid="zp"):
-    """Render Z-score panel with working animation via components.html"""
+def render_zscore_panel(z, d):
     zl, zs, zc, zbg, zbd = zone_info(z)
     gp = gauge_pct(z)
 
@@ -176,12 +175,7 @@ def render_zscore_panel(z, d, uid="zp"):
 <style>
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 body {{ background: transparent; font-family: 'Syne', sans-serif; }}
-.panel {{
-    background: #14161B;
-    border: 0.5px solid rgba(201,168,76,0.2);
-    border-radius: 16px;
-    padding: 1.4rem 1.5rem;
-}}
+.panel {{ background: #14161B; border: 0.5px solid rgba(201,168,76,0.2); border-radius: 16px; padding: 1.4rem 1.5rem; }}
 .top {{ display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.4rem; }}
 .label {{ font-size: 10px; color: #5C5850; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }}
 .zscore {{ font-family: 'DM Mono', monospace; font-size: 56px; font-weight: 500; color: #C9A84C; line-height: 1; }}
@@ -243,7 +237,6 @@ setTimeout(function() {{ mk.style.left = gp + '%'; }}, 80);
 
 
 def render_comparison_card(ticker, d, delay_ms=100):
-    """Render a single comparison card with animated Z-score"""
     if not d["ok"]:
         components.html(f"""
         <div style="background:#14161B;border:0.5px solid rgba(240,96,96,0.2);border-radius:14px;
@@ -259,9 +252,9 @@ def render_comparison_card(ticker, d, delay_ms=100):
     gp = gauge_pct(z)
     initials_c = ticker[:2]
     if d["logo"]:
-        logo_tag = f'<div style="width:36px;height:36px;border-radius:8px;background:#1C1F27;padding:4px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><img src="{d["logo"]}" style="width:28px;height:28px;object-fit:contain;"></div>'
+        logo_tag = f'<div style="width:32px;height:32px;border-radius:7px;background:#FFFFFF;padding:3px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><img src="{d["logo"]}" style="width:100%;height:100%;object-fit:contain;border-radius:3px;"></div>'
     else:
-        logo_tag = f'<div style="width:36px;height:36px;border-radius:8px;background:rgba(201,168,76,0.15);border:0.5px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:12px;font-weight:500;color:#C9A84C;margin:0 auto 8px;">{initials_c}</div>'
+        logo_tag = f'<div style="width:32px;height:32px;border-radius:7px;background:rgba(201,168,76,0.15);border:0.5px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:11px;font-weight:500;color:#C9A84C;margin:0 auto 8px;">{initials_c}</div>'
 
     components.html(f"""
 <!DOCTYPE html>
@@ -329,13 +322,13 @@ st.markdown("""
     </div>
     <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8A6E2F;
                 background:rgba(201,168,76,0.08);border:0.5px solid rgba(201,168,76,0.15);
-                padding:4px 10px;border-radius:4px;letter-spacing:1px;">v1.2</div>
+                padding:4px 10px;border-radius:4px;letter-spacing:1px;">v1.1</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3 = st.tabs(["📊  Single Analysis", "⚔️  Competitor Comparison", "🧮  Ohlson O-Score"])
+tab1, tab2 = st.tabs(["📊  Single Analysis", "⚔️  Competitor Comparison"])
 
 # ════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Single Analysis
@@ -358,12 +351,15 @@ with tab1:
         else:
             z = d["z"]
 
-            # Company banner — avatar always shown, logo overlaid if available
+            # Company banner
             initials = ticker[:2]
             if d["logo"]:
-                logo_html = f'<div style="width:38px;height:38px;border-radius:8px;background:#1C1F27;padding:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><img src="{d["logo"]}" style="width:30px;height:30px;object-fit:contain;"></div>'
+                logo_html = f'''<div style="width:38px;height:38px;border-radius:8px;background:#FFFFFF;padding:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+                  <img src="{d['logo']}" style="width:100%;height:100%;object-fit:contain;border-radius:4px;">
+                </div>'''
             else:
                 logo_html = f'<div style="width:38px;height:38px;border-radius:8px;background:rgba(201,168,76,0.15);border:0.5px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:13px;font-weight:500;color:#C9A84C;flex-shrink:0;">{initials}</div>'
+
             st.markdown(f"""
             <div class="fu2" style="background:#14161B;border:0.5px solid rgba(201,168,76,0.2);border-radius:14px;
                         padding:1.2rem 1.5rem;display:flex;align-items:center;
@@ -397,7 +393,7 @@ with tab1:
                 with cols[i % 2]:
                     st.markdown(f'<div style="display:flex;justify-content:space-between;align-items:center;background:#14161B;border-radius:8px;padding:10px 14px;border:0.5px solid rgba(201,168,76,0.08);margin-bottom:8px;"><span style="font-size:12px;color:#9B9589;">{lbl}</span><span style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:500;color:#F0EDE6;">{fmt(val)}</span></div>', unsafe_allow_html=True)
 
-            # Z-Score panel — uses components.html for real JS animation
+            # Z-Score panel
             st.markdown('<div class="fu4" style="display:flex;align-items:center;gap:10px;margin:1.5rem 0 0.8rem;"><span style="font-size:10px;font-weight:600;color:#5C5850;letter-spacing:2px;text-transform:uppercase;">Altman Z-Score</span><div style="flex:1;height:0.5px;background:rgba(201,168,76,0.1);"></div></div>', unsafe_allow_html=True)
             render_zscore_panel(z, d)
 
@@ -495,291 +491,3 @@ with tab2:
                 html += "</div>"
 
                 st.markdown(html, unsafe_allow_html=True)
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Ohlson O-Score
-# ════════════════════════════════════════════════════════════════════════════
-
-def compute_oscore(ticker_str):
-    """
-    Ohlson (1980) O-Score formula:
-    O = -1.32 - 0.407*X1 + 6.03*X2 - 1.43*X3 + 0.076*X4
-            - 1.72*X5 - 2.37*X6 - 1.83*X7 + 0.285*X8 - 0.521*X9
-    P(distress) = 1 / (1 + exp(-O))
-
-    X1 = log(Total Assets / GNP Price Index)  → simplified: log(Total Assets)
-    X2 = Total Liabilities / Total Assets
-    X3 = Working Capital / Total Assets
-    X4 = Current Liabilities / Current Assets
-    X5 = 1 if Total Liabilities > Total Assets, else 0
-    X6 = Net Income / Total Assets
-    X7 = Cash Flow from Operations / Total Liabilities
-    X8 = 1 if Net Income < 0 for last two years, else 0
-    X9 = (Net Income_t - Net Income_t-1) / (|NI_t| + |NI_t-1|)
-    """
-    import math
-    stock = yf.Ticker(ticker_str)
-    info  = stock.info
-    bs    = stock.balance_sheet
-    inc   = stock.income_stmt
-    cf    = stock.cash_flow
-
-    name    = info.get("longName", ticker_str)
-    sector  = info.get("sector", "N/A")
-    country = info.get("country", "N/A")
-    mc      = info.get("marketCap", 0) or 0
-    website = info.get("website", "") or ""
-    domain  = website.replace("https://","").replace("http://","").split("/")[0]
-    logo    = f"https://www.google.com/s2/favicons?domain={domain}&sz=64" if domain else ""
-
-    ta  = get_val(bs, "Total Assets", "TotalAssets")
-    tl  = get_val(bs, "Total Liabilities Net Minority Interest", "Total Liabilities", "TotalLiabilities")
-    wc  = get_val(bs, "Working Capital", "WorkingCapital")
-    ca  = get_val(bs, "Current Assets", "CurrentAssets")
-    cl  = get_val(bs, "Current Liabilities", "CurrentLiabilities")
-    ni  = get_val(inc, "Net Income", "NetIncome")
-    cfo = get_val(cf,  "Operating Cash Flow", "Cash Flow From Continuing Operating Activities", "Free Cash Flow")
-
-    if wc is None and ca and cl:
-        wc = ca - cl
-
-    # Net Income previous year for X8 and X9
-    ni_prev = None
-    if inc is not None and len(inc.columns) > 1:
-        for k in ["Net Income", "NetIncome"]:
-            if k in inc.index:
-                try:
-                    ni_prev = float(inc.loc[k].iloc[1])
-                    break
-                except:
-                    pass
-
-    required = [ta, tl, wc, ca, cl, ni, cfo]
-    if not all(v is not None for v in required) or ta == 0 or tl == 0:
-        return dict(ok=False, name=name, sector=sector, country=country, logo=logo, mc=mc)
-
-    x1 = math.log(abs(ta)) if ta > 0 else 0
-    x2 = tl / ta
-    x3 = wc / ta
-    x4 = cl / ca if ca != 0 else 0
-    x5 = 1 if tl > ta else 0
-    x6 = ni / ta
-    x7 = cfo / tl if tl != 0 else 0
-    x8 = 1 if (ni_prev is not None and ni < 0 and ni_prev < 0) else 0
-    if ni_prev is not None and (abs(ni) + abs(ni_prev)) != 0:
-        x9 = (ni - ni_prev) / (abs(ni) + abs(ni_prev))
-    else:
-        x9 = 0
-
-    o = (-1.32
-         - 0.407 * x1
-         + 6.03  * x2
-         - 1.43  * x3
-         + 0.076 * x4
-         - 1.72  * x5
-         - 2.37  * x6
-         - 1.83  * x7
-         + 0.285 * x8
-         - 0.521 * x9)
-
-    prob = 1 / (1 + math.exp(-o))
-
-    return dict(
-        ok=True, name=name, sector=sector, country=country, logo=logo, mc=mc,
-        o=o, prob=prob,
-        x1=x1, x2=x2, x3=x3, x4=x4, x5=x5,
-        x6=x6, x7=x7, x8=x8, x9=x9,
-        ta=ta, tl=tl, wc=wc, ca=ca, cl=cl, ni=ni, cfo=cfo,
-        ni_prev=ni_prev
-    )
-
-
-def o_zone(prob):
-    p = prob * 100
-    if p < 20:
-        return "Low Risk",    f"{p:.1f}%", "#3FCF8E", "#0D2B1F", "rgba(63,207,142,0.2)"
-    if p < 50:
-        return "Medium Risk", f"{p:.1f}%", "#F0A030", "#2B1A05", "rgba(240,160,48,0.2)"
-    return     "High Risk",   f"{p:.1f}%", "#F06060", "#2B0D0D", "rgba(240,96,96,0.2)"
-
-
-def render_oscore_panel(prob, o_val):
-    zl, pct_str, zc, zbg, zbd = o_zone(prob)
-    pct = prob * 100
-    html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
-* {{ box-sizing:border-box; margin:0; padding:0; }}
-body {{ background:transparent; font-family:'Syne',sans-serif; }}
-.panel {{ background:#14161B; border:0.5px solid rgba(201,168,76,0.2); border-radius:16px; padding:1.4rem 1.5rem; }}
-.top {{ display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:1.4rem; }}
-.label {{ font-size:10px; color:#5C5850; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px; }}
-.prob {{ font-family:'DM Mono',monospace; font-size:56px; font-weight:500; color:#C9A84C; line-height:1; }}
-.zone-box {{ display:flex; align-items:center; gap:8px; background:{zbg}; border:0.5px solid {zbd}; border-radius:10px; padding:10px 16px; }}
-.zone-dot {{ width:8px; height:8px; border-radius:50%; background:{zc}; flex-shrink:0; }}
-.zone-label {{ font-size:14px; font-weight:700; color:{zc}; }}
-.zone-sub {{ font-size:11px; color:{zc}; opacity:0.6; margin-top:1px; }}
-.bar-wrap {{ position:relative; height:6px; background:#242830; border-radius:3px; margin-bottom:8px; overflow:visible; }}
-.bar-track {{ position:absolute; left:0; top:0; height:100%; width:100%; border-radius:3px; background:linear-gradient(90deg,#3FCF8E 0%,#F0A030 50%,#F06060 100%); }}
-.bar-marker {{ position:absolute; top:-3px; left:5%; width:10px; height:10px; background:#F0EDE6; border-radius:50%; transform:translateX(-50%); border:2px solid #14161B; transition:left 1.2s cubic-bezier(.4,0,.2,1); }}
-.bar-labels {{ display:flex; justify-content:space-between; font-size:10px; color:#5C5850; font-family:'DM Mono',monospace; }}
-.o-val {{ margin-top:10px; font-size:11px; color:#5C5850; font-family:'DM Mono',monospace; }}
-</style>
-</head>
-<body>
-<div class="panel">
-  <div class="top">
-    <div>
-      <div class="label">Distress Probability</div>
-      <div class="prob" id="pnum">0.0%</div>
-    </div>
-    <div class="zone-box">
-      <div class="zone-dot"></div>
-      <div>
-        <div class="zone-label">{zl}</div>
-        <div class="zone-sub">O-Score: {o_val:.3f}</div>
-      </div>
-    </div>
-  </div>
-  <div class="bar-wrap">
-    <div class="bar-track"></div>
-    <div class="bar-marker" id="bmark"></div>
-  </div>
-  <div class="bar-labels">
-    <span>Low &lt;20%</span><span>Medium 20–50%</span><span>High &gt;50%</span>
-  </div>
-  <div class="o-val">Raw O-Score: {o_val:.4f} &nbsp;|&nbsp; P = 1/(1+e^-O)</div>
-</div>
-<script>
-var target={pct:.4f}, mk=document.getElementById('bmark'), el=document.getElementById('pnum');
-var start=null, dur=1200;
-function step(ts){{
-  if(!start) start=ts;
-  var p=Math.min((ts-start)/dur,1), e=1-Math.pow(1-p,3);
-  el.textContent=(target*e).toFixed(1)+'%';
-  if(p<1) requestAnimationFrame(step);
-  else el.textContent=target.toFixed(1)+'%';
-}}
-requestAnimationFrame(step);
-setTimeout(function(){{ mk.style.left=Math.min(94,target)+'%'; }}, 80);
-</script>
-</body>
-</html>
-"""
-    components.html(html, height=190)
-
-
-with tab3:
-    st.markdown('<div style="font-size:11px;font-weight:500;color:#9B9589;letter-spacing:1.5px;text-transform:uppercase;margin:1rem 0 6px;">Company Ticker</div>', unsafe_allow_html=True)
-    o1, o2 = st.columns([4, 1])
-    with o1:
-        t_o = st.text_input("to", placeholder="e.g. AAPL, TSLA, MSFT", label_visibility="collapsed")
-    with o2:
-        btn3 = st.button("Analyze →", key="btn3")
-
-    if btn3 and t_o.strip():
-        ticker_o = t_o.strip().upper()
-        with st.spinner("Fetching data..."):
-            od = compute_oscore(ticker_o)
-
-        if not od["ok"]:
-            st.markdown('<div style="background:#2B0D0D;border:0.5px solid rgba(240,96,96,0.2);border-radius:10px;padding:1rem 1.2rem;color:#F06060;font-size:13px;margin-top:1rem;">Required financial fields missing — O-score could not be calculated.</div>', unsafe_allow_html=True)
-        else:
-            prob = od["prob"]
-            zl, _, zc, _, _ = o_zone(prob)
-
-            # Company banner
-            initials_o = ticker_o[:2]
-            if od["logo"]:
-                logo_o = f'<div style="width:38px;height:38px;border-radius:8px;background:#1C1F27;padding:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><img src="{od["logo"]}" style="width:30px;height:30px;object-fit:contain;"></div>'
-            else:
-                logo_o = f'<div style="width:38px;height:38px;border-radius:8px;background:rgba(201,168,76,0.15);border:0.5px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:13px;font-weight:500;color:#C9A84C;flex-shrink:0;">{initials_o}</div>'
-
-            st.markdown(f"""
-            <div class="fu2" style="background:#14161B;border:0.5px solid rgba(201,168,76,0.2);border-radius:14px;
-                        padding:1.2rem 1.5rem;display:flex;align-items:center;
-                        justify-content:space-between;flex-wrap:wrap;gap:12px;margin:1rem 0 1.5rem;">
-              <div style="display:flex;align-items:center;gap:12px;">
-                {logo_o}
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <div style="background:rgba(201,168,76,0.1);border:0.5px solid rgba(201,168,76,0.2);
-                              border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;
-                              font-size:13px;font-weight:500;color:#C9A84C;letter-spacing:1px;">{ticker_o}</div>
-                  <div>
-                    <div style="font-size:17px;font-weight:700;color:#F0EDE6;">{od['name']}</div>
-                    <div style="font-size:12px;color:#9B9589;margin-top:1px;">{od['sector']} · {od['country']}</div>
-                  </div>
-                </div>
-              </div>
-              <div style="text-align:right;">
-                <div style="font-size:10px;color:#5C5850;letter-spacing:1px;text-transform:uppercase;">Market Cap</div>
-                <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:#F0EDE6;margin-top:2px;">{fmt(od['mc'])}</div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Raw financials for O-Score
-            st.markdown('<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;"><span style="font-size:10px;font-weight:600;color:#5C5850;letter-spacing:2px;text-transform:uppercase;">Raw Financials</span><div style="flex:1;height:0.5px;background:rgba(201,168,76,0.1);"></div></div>', unsafe_allow_html=True)
-            o_fin_rows = [
-                ("Total Assets",      od['ta']),
-                ("Total Liabilities", od['tl']),
-                ("Working Capital",   od['wc']),
-                ("Current Assets",    od['ca']),
-                ("Current Liabilities", od['cl']),
-                ("Net Income",        od['ni']),
-                ("Net Income (prev)", od['ni_prev']),
-                ("Operating Cash Flow", od['cfo']),
-            ]
-            ocols = st.columns(2)
-            for i, (lbl, val) in enumerate(o_fin_rows):
-                with ocols[i % 2]:
-                    st.markdown(f'<div style="display:flex;justify-content:space-between;align-items:center;background:#14161B;border-radius:8px;padding:10px 14px;border:0.5px solid rgba(201,168,76,0.08);margin-bottom:8px;"><span style="font-size:12px;color:#9B9589;">{lbl}</span><span style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:500;color:#F0EDE6;">{fmt(val) if val is not None else "N/A"}</span></div>', unsafe_allow_html=True)
-
-            # O-Score panel
-            st.markdown('<div style="display:flex;align-items:center;gap:10px;margin:1.5rem 0 0.8rem;"><span style="font-size:10px;font-weight:600;color:#5C5850;letter-spacing:2px;text-transform:uppercase;">Ohlson O-Score</span><div style="flex:1;height:0.5px;background:rgba(201,168,76,0.1);"></div></div>', unsafe_allow_html=True)
-            render_oscore_panel(prob, od["o"])
-
-            # Variable breakdown
-            st.markdown('<div style="display:flex;align-items:center;gap:10px;margin:1.2rem 0 0.8rem;"><span style="font-size:10px;font-weight:600;color:#5C5850;letter-spacing:2px;text-transform:uppercase;">Variable Breakdown</span><div style="flex:1;height:0.5px;background:rgba(201,168,76,0.1);"></div></div>', unsafe_allow_html=True)
-
-            o_vars = [
-                ("X1", "log(Total Assets)",           od['x1'], "−0.407"),
-                ("X2", "Total Liabilities / Assets",  od['x2'], "+6.03"),
-                ("X3", "Working Capital / Assets",    od['x3'], "−1.43"),
-                ("X4", "Current Liab / Current Assets", od['x4'], "+0.076"),
-                ("X5", "Insolvent (0/1)",             od['x5'], "−1.72"),
-            ]
-            o_vars2 = [
-                ("X6", "Net Income / Assets",         od['x6'], "−2.37"),
-                ("X7", "CFO / Total Liabilities",     od['x7'], "−1.83"),
-                ("X8", "2yr Loss (0/1)",              od['x8'], "+0.285"),
-                ("X9", "NI Change Ratio",             od['x9'], "−0.521"),
-            ]
-
-            cols5o = st.columns(5)
-            for i, (nm, formula, val, wt) in enumerate(o_vars):
-                with cols5o[i]:
-                    st.markdown(f'<div style="background:#1C1F27;border:0.5px solid rgba(201,168,76,0.08);border-radius:10px;padding:0.9rem 0.8rem;text-align:center;"><div style="font-size:11px;font-weight:700;color:#C9A84C;margin-bottom:3px;">{nm}</div><div style="font-size:9px;color:#5C5850;margin-bottom:8px;line-height:1.3;">{formula}</div><div style="font-family:\'DM Mono\',monospace;font-size:17px;font-weight:500;color:#F0EDE6;">{val:.3f}</div><div style="font-size:9px;color:#5C5850;margin-top:3px;font-family:\'DM Mono\',monospace;">{wt}</div></div>', unsafe_allow_html=True)
-
-            cols4o = st.columns(4)
-            for i, (nm, formula, val, wt) in enumerate(o_vars2):
-                with cols4o[i]:
-                    st.markdown(f'<div style="background:#1C1F27;border:0.5px solid rgba(201,168,76,0.08);border-radius:10px;padding:0.9rem 0.8rem;text-align:center;margin-top:8px;"><div style="font-size:11px;font-weight:700;color:#C9A84C;margin-bottom:3px;">{nm}</div><div style="font-size:9px;color:#5C5850;margin-bottom:8px;line-height:1.3;">{formula}</div><div style="font-family:\'DM Mono\',monospace;font-size:17px;font-weight:500;color:#F0EDE6;">{val:.3f}</div><div style="font-size:9px;color:#5C5850;margin-top:3px;font-family:\'DM Mono\',monospace;">{wt}</div></div>', unsafe_allow_html=True)
-
-            # Interpretation
-            pct = prob * 100
-            if pct < 20:
-                interp = f"With a distress probability of <b>{pct:.1f}%</b>, this company shows <b>low risk</b> of financial distress under the Ohlson O-Score model. The company's leverage, liquidity, and profitability indicators are within healthy ranges."
-            elif pct < 50:
-                interp = f"A distress probability of <b>{pct:.1f}%</b> places this company in the <b>medium risk</b> zone. Some financial indicators warrant monitoring — particularly leverage and cash flow metrics."
-            else:
-                interp = f"A distress probability of <b>{pct:.1f}%</b> signals <b>high risk</b> of financial distress. The Ohlson model identifies significant stress in this company's financial structure. Caution is advised."
-
-            st.markdown(f'<div style="margin-top:1.2rem;background:#1C1F27;border-left:2px solid #C9A84C;border-radius:0 10px 10px 0;padding:1rem 1.2rem;font-size:13px;color:#9B9589;line-height:1.7;">{interp}</div>', unsafe_allow_html=True)
-
-    elif btn3:
-        st.markdown('<div style="background:#2B1A05;border:0.5px solid rgba(240,160,48,0.2);border-radius:10px;padding:1rem 1.2rem;color:#F0A030;font-size:13px;margin-top:1rem;">Please enter a ticker symbol.</div>', unsafe_allow_html=True)
